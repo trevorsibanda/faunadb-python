@@ -1,7 +1,7 @@
 from datetime import date, datetime
 import iso8601
 
-from faunadb.objects import FaunaTime, Ref, SetRef
+from faunadb.objects import FaunaTime, FaunaDate, Ref, SetRef
 from faunadb import query
 from tests.helpers import FaunaTestCase
 
@@ -62,6 +62,4 @@ class ObjectsTest(FaunaTestCase):
     self.assertNotEqual(test_ts, FaunaTime("some_other_time"))
 
   def test_date(self):
-    test_date = date(1970, 1, 1)
-    test_date_json = '{"@date":"1970-01-01"}'
-    self.assertJson(test_date, test_date_json)
+    self.assertJson(FaunaDate("1970-01-01"), '{"@date":"1970-01-01"}')

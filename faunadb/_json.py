@@ -1,8 +1,7 @@
 from datetime import date, datetime
 from json import dumps, loads, JSONEncoder
-from iso8601 import parse_date
 
-from faunadb.objects import FaunaTime, Ref, SetRef
+from faunadb.objects import FaunaTime, FaunaDate, Ref, SetRef
 from faunadb.query import _Expr
 
 
@@ -34,7 +33,7 @@ def _parse_json_hook(dct):
   if "@ts" in dct:
     return FaunaTime(dct["@ts"])
   if "@date" in dct:
-    return parse_date(dct["@date"]).date()
+    return FaunaDate(dct["@date"])
   else:
     return dct
 
@@ -59,6 +58,6 @@ class _FaunaJSONEncoder(JSONEncoder):
     elif isinstance(obj, datetime):
       return FaunaTime(obj).to_fauna_json()
     elif isinstance(obj, date):
-      return {"@date": obj.isoformat()}
+      return FaunaDate(obj).to_fauna_json()
     else:
       return obj

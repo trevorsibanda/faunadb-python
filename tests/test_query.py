@@ -2,7 +2,7 @@ from __future__ import division
 from datetime import date
 
 from faunadb.errors import BadRequest, NotFound
-from faunadb.objects import FaunaTime, Ref, SetRef
+from faunadb.objects import FaunaTime, FaunaDate, Ref, SetRef
 from faunadb import query
 from tests.helpers import FaunaTestCase
 
@@ -298,7 +298,7 @@ class QueryTest(FaunaTestCase):
     self.assertEqual(self._q(query.epoch(123456789, "nanosecond")), nano_time)
 
   def test_date(self):
-    self.assertEqual(self._q(query.date("1970-01-01")), date(1970, 1, 1))
+    self.assertEqual(self._q(query.date("1970-01-01")), FaunaDate("1970-01-01"))
 
   #endregion
 

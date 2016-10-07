@@ -96,8 +96,6 @@ class SetRef(_Expr):
 class FaunaTime(_Expr):
   """
   FaunaDB time. See the `docs <https://faunadb.com/documentation/queries#values-special_types>`__.
-
-  For dates, regular :class:`datetime.date` objects are used.
   """
 
   def __init__(self, value):
@@ -131,6 +129,38 @@ class FaunaTime(_Expr):
 
   def __eq__(self, other):
     return isinstance(other, FaunaTime) and self.value == other.value
+
+  def __ne__(self, other):
+    # pylint: disable=unneeded-not
+    return not self == other
+
+
+class FaunaDate(_Expr):
+  """
+  FaunaDB date. See the `docs <https://faunadb.com/documentation/queries#values-special_types>`__.
+  """
+
+  def __init__(self, value):
+    """
+    :param value:
+      If a :class:`datetime.date` is passed, it is converted to a string.
+    """
+    if isinstance(value, datetime):
+      value = value.isoformat()
+
+    super(FaunaDate, self).__init__(value)
+
+  def to_date(self):
+    return parse_date(self.value).date()
+
+  def to_fauna_json(self):
+    return {"@date": self.value}
+
+  def __repr__(self):
+    return "FaunaDate(%s)" % repr(self.value)
+
+  def __eq__(self, other):
+    return isinstance(other, FaunaDate) and self.value == other.value
 
   def __ne__(self, other):
     # pylint: disable=unneeded-not
