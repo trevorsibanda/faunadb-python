@@ -1,6 +1,7 @@
 from time import time
 # pylint: disable=redefined-builtin
 from builtins import object
+from base64 import b64encode
 import threading
 
 from requests import Request, Session
@@ -11,6 +12,7 @@ from faunadb.errors import _get_or_raise, FaunaError, UnexpectedError
 from faunadb.query import _wrap
 from faunadb.request_result import RequestResult
 from faunadb._json import parse_json_or_none, to_json
+from faunadb.streams import Subscription
 
 API_VERSION = "3"
 
@@ -187,6 +189,31 @@ class FaunaClient(object):
     """
     return self._execute("POST", "", _wrap(expression), with_txn_time=True, query_timeout_ms=timeout_millis)
 
+  def stream(self, expression, options=None, on_start=None, on_error=None, on_version=None, on_history=None, blocking=True):
+    """
+    Creates a stream Subscription to the result of the given read-only expression. When
+    executed.
+
+    The subscription returned by this method does not issue any requests until
+    the subscription's start method is called. Make sure to
+    subscribe to the events of interest, otherwise the received events are simply
+    ignored.
+
+    :param expression:   A read-only expression.
+    :param    options:   Object that configures the stream subscription. E.g set fields to return
+    :param   on_start:   Callback for the stream's start event.
+    :param   on_error:   Callback for the stream's error event.
+    :param   on_version: Callback for the stream's version events.
+    :param   on_history: Callback for the stream's history_rewrite events.
+    :param   blocking:   Run the subscription eventloop in the same thread. Default is True
+    """
+    subscription = Subscription(self, expression, options, blocking)
+    subscription.on('start', on_start)
+    subscription.on('error', on_error)
+    subscription.on('version', on_version)
+    subscription.on('history_rewrite', on_history)
+    return subscription
+
   def ping(self, scope=None, timeout=None):
     """
     Ping FaunaDB.
@@ -264,3 +291,8 @@ class FaunaClient(object):
     url = self.base_url + "/" + path
     req = Request(action, url, params=query, data=to_json(data), auth=self.auth, headers=headers)
     return self.session.send(self.session.prepare_request(req))
+
+  def _auth_header(self):
+    """Returns the HTTP authentication header"""
+    auth = b64encode(self.auth.username.encode()).decode()
+    return "Basic {}".format(auth)
